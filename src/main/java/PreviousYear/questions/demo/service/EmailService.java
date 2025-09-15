@@ -29,7 +29,7 @@ public class EmailService {
             // Use MimeMessageHelper for HTML emails
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
 
-            String verificationUrl = "https://qp-backend-sg1x.onrender.com" + token;
+            String verificationUrl = "https://qp-backend-sg1x.onrender.com/auth/verify?token=" + token;
 
             // --- THIS IS THE NEW HTML EMAIL BODY ---
             String htmlBody = "<html>"
