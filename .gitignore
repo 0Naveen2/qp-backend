@@ -1,0 +1,23 @@
+# Java / Spring Boot
+*.class
+*.jar
+*.war
+*.log
+*.iml
+*.h2.db
+target/
+build/
+
+# Eclipse / IntelliJ
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+
+# Local secret files
+application-local.properties
+
+# Node / frontend (if applicable)
+node_modules/
+dist/

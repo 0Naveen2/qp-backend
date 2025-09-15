@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: qparchive-backend
+    env: java
+    buildCommand: "./mvnw clean package -DskipTests"
+    # This command now explicitly tells the app to use the port Render provides
+    startCommand: "java -jar target/demo-0.0.1-SNAPSHOT.jar --server.port=${PORT}"
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: JAVA_TOOL_OPTIONS
+        value: -Xmx300m
+      - fromGroup: qparchive-secrets
