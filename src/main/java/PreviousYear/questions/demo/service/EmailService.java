@@ -29,7 +29,7 @@ public class EmailService {
             // Use MimeMessageHelper for HTML emails
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
 
-            String verificationUrl = "http://localhost:7070/auth/verify?token=" + token;
+            String verificationUrl = "https://qp-backend-sg1x.onrender.com" + token;
 
             // --- THIS IS THE NEW HTML EMAIL BODY ---
             String htmlBody = "<html>"
@@ -49,7 +49,8 @@ public class EmailService {
                     + "</body>"
                     + "</html>";
 
-            helper.setFrom("your-email@gmail.com"); // This must match your configured email in application.properties
+            helper.setFrom("qparchive.team@gmail.com"); // This must match your configured email in
+                                                        // application.properties
             helper.setTo(toEmail);
             helper.setSubject("Complete Your QPArchive Registration");
             helper.setText(htmlBody, true); // The 'true' argument specifies that the content is HTML
