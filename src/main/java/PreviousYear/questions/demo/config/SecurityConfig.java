@@ -74,7 +74,7 @@ public class SecurityConfig {
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/", configuration);
+        source.registerCorsConfiguration("/**", configuration);
         return source;
     }
 
@@ -88,15 +88,15 @@ public class SecurityConfig {
                 .headers(headers -> headers
                         .frameOptions(frame -> frame.disable()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/h2-console/").permitAll()
+                        // .requestMatchers("/h2-console/").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
-                        .requestMatchers("/auth/").permitAll()
+                        .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/verify").permitAll()
                         .requestMatchers("/").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/departments", "/courses/", "/subjects/", "/papers/")
+                        .requestMatchers(HttpMethod.GET, "/departments", "/courses/**", "/subjects/**", "/papers/**")
                         .authenticated()
                         .requestMatchers(HttpMethod.POST, "/papers/upload").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/papers/").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/papers/**").authenticated()
                         .anyRequest().hasRole("ADMIN"))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
