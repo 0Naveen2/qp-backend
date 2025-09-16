@@ -1,6 +1,14 @@
 package PreviousYear.questions.demo.config;
 
 import PreviousYear.questions.demo.service.CustomUserDetailsService;
+// import PreviousYear.questions.demo.filter.JwtAuthFilter;
+
+// TODO: Update the import below to the correct package where JwtAuthFilter is located
+// For example, if JwtAuthFilter is in 'PreviousYear.questions.demo.security', use:
+// import PreviousYear.questions.demo.security.JwtAuthFilter;
+// TODO: Update the import below to the correct package where JwtAuthFilter is located
+// For example, if JwtAuthFilter is in 'PreviousYear.questions.demo.filter', use:
+// import PreviousYear.questions.demo.filter.JwtAuthFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -61,13 +69,12 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(
                 "http://localhost:5173",
-                "https://qparchive-frontend.onrender.com" // Ensure this is your correct frontend URL
-        ));
+                "https://qparchive-frontend.onrender.com"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+        source.registerCorsConfiguration("/", configuration);
         return source;
     }
 
@@ -75,14 +82,21 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(withDefaults())
-                .csrf(csrf -> csrf.disable())
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers("/h2-console/")
+                        .disable())
+                .headers(headers -> headers
+                        .frameOptions(frame -> frame.disable()))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/h2-console/").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
-                        .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/departments", "/courses/**", "/subjects/**", "/papers/**")
+                        .requestMatchers("/auth/").permitAll()
+                        .requestMatchers("/verify").permitAll()
+                        .requestMatchers("/").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/departments", "/courses/", "/subjects/", "/papers/")
                         .authenticated()
                         .requestMatchers(HttpMethod.POST, "/papers/upload").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/papers/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/papers/").authenticated()
                         .anyRequest().hasRole("ADMIN"))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())

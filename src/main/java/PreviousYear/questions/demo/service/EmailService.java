@@ -1,65 +1,58 @@
 package PreviousYear.questions.demo.service;
 
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
+import com.sendgrid.*;
+import com.sendgrid.helpers.mail.Mail;
+import com.sendgrid.helpers.mail.objects.Content;
+import com.sendgrid.helpers.mail.objects.Email;
+
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
+
+import java.io.IOException;
 
 @Service
 public class EmailService {
 
-    private final JavaMailSender mailSender;
+    @Value("${sendgrid.api.key}")
+    private String sendGridApiKey;
 
-    @Autowired
-    public EmailService(JavaMailSender mailSender) {
-        this.mailSender = mailSender;
-    }
+    public void sendVerificationEmail(String toEmail, String token) throws IOException {
+        Email from = new Email("qparchive.team@gmail.com");
+        String subject = "Complete Your QPArchive Registration";
+        Email to = new Email(toEmail);
+        String verificationUrl = "https://qp-backend-sg1x.onrender.com/auth/verify?token=" + token;
+        String htmlBody = "<html>"
+                + "<body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>"
+                + "<h2>Welcome to QPArchive!</h2>"
+                + "<p>Hi there,</p>"
+                + "<p>Thanks for signing up with QPArchive. We're excited to help you explore and archive past exam papers with ease.</p>"
+                + "<p>To activate your account, please verify your email address by clicking the button below. This link will expire in 24 hours.</p>"
+                + "<br>"
+                + "<a href='" + verificationUrl + "' "
+                + "style='display: inline-block; padding: 12px 24px; font-size: 16px; color: #ffffff; background-color: #007bff; text-decoration: none; border-radius: 5px;'>"
+                + "Verify Your Account"
+                + "</a>"
+                + "<br><br>"
+                + "<p>If you didn’t sign up for QPArchive, you can safely ignore this email.</p>"
+                + "<hr style='margin-top: 30px;'>"
+                + "<p style='font-size: 12px; color: #777;'>"
+                + "Sent by QPArchive • qparchive.team@gmail.com<br>"
+                + "This is an automated message. Please do not reply directly to this email."
+                + "</p>"
+                + "</body>"
+                + "</html>";
 
-    /**
-     * Sends a formatted HTML verification email to a new user.
-     * 
-     * @param toEmail The recipient's email address.
-     * @param token   The unique verification token.
-     */
-    public void sendVerificationEmail(String toEmail, String token) {
-        MimeMessage mimeMessage = mailSender.createMimeMessage();
-        try {
-            // Use MimeMessageHelper for HTML emails
-            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+        Content content = new Content("text/html", htmlBody);
+        Mail mail = new Mail(from, subject, to, content);
 
-            String verificationUrl = "https://qp-backend-sg1x.onrender.com/auth/verify?token=" + token;
+        SendGrid sg = new SendGrid(sendGridApiKey);
+        Request request = new Request();
 
-            // --- THIS IS THE NEW HTML EMAIL BODY ---
-            String htmlBody = "<html>"
-                    + "<body style='font-family: Arial, sans-serif; line-height: 1.6;'>"
-                    + "<h2>Greetings from the QPArchive Team!</h2>"
-                    + "<p>Thank you for creating an account with us. We're excited to have you on board.</p>"
-                    + "<p>To complete your registration, please click the button below to verify your email address. This link is valid for 24 hours.</p>"
-                    + "<br>"
-                    + "<a href='" + verificationUrl + "' "
-                    + "style='display: inline-block; padding: 12px 24px; font-size: 16px; color: #ffffff; background-color: #007bff; text-decoration: none; border-radius: 5px;'>"
-                    + "Verify Your Account"
-                    + "</a>"
-                    + "<br><br>"
-                    + "<p>If you did not request this, please ignore this email.</p>"
-                    + "<br>"
-                    + "<p>Best regards,<br>The QPArchive Team</p>"
-                    + "</body>"
-                    + "</html>";
+        request.setMethod(Method.POST);
+        request.setEndpoint("mail/send");
+        request.setBody(mail.build());
 
-            helper.setFrom("qparchive.team@gmail.com"); // This must match your configured email in
-                                                        // application.properties
-            helper.setTo(toEmail);
-            helper.setSubject("Complete Your QPArchive Registration");
-            helper.setText(htmlBody, true); // The 'true' argument specifies that the content is HTML
-
-            mailSender.send(mimeMessage);
-
-        } catch (MessagingException e) {
-            // In a real application, you would have more robust error logging here
-            System.err.println("Error sending HTML verification email: " + e.getMessage());
-        }
+        Response response = sg.api(request);
+        System.out.println("SendGrid response: " + response.getStatusCode());
     }
 }

@@ -30,8 +30,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             FilterChain filterChain)
             throws ServletException, IOException {
 
-        final String authHeader = request.getHeader("Authorization");
+        String path = request.getRequestURI();
 
+        if (path.startsWith("/auth") || path.equals("/")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        final String authHeader = request.getHeader("Authorization");
         String username = null;
         String token = null;
 
@@ -40,17 +46,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             try {
                 username = jwtUtil.extractUsername(token);
             } catch (Exception e) {
-                // invalid token
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid JWT token");
                 return;
             }
         }
 
-        // If username exists and context not set
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-            // This line is corrected from validateToken to isTokenValid
             if (jwtUtil.isTokenValid(token, userDetails)) {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails,
                         null, userDetails.getAuthorities());
