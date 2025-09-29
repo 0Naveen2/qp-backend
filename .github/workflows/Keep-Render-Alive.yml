@@ -30,5 +30,5 @@ jobs:
       - name: Get all departments
         run: |
           echo "Using token to fetch departments..."
-          curl -f -X GET '${{ secrets.you-backend-url}}/departments' \
+          curl -f -X GET '${{ secrets.you_backend_url}}/departments' \
           -H 'Authorization: Bearer ${{ steps.login.outputs.jwt }}'
