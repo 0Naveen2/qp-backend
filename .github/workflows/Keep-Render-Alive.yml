@@ -1,21 +1,23 @@
 # .github/workflows/api-test.yml
 
-name: 'Login and Test Departments Endpoint'
+name: 'Login and Test Departments Endpoint every 5 minutes'
 
 on:
   schedule:
-    # This runs the workflow every 5 minutes
+    # This is the cron schedule for "every 5 minutes"
     - cron: '*/5 * * * *'
+  push:
+    branches: [ main ]
 
 jobs:
   login-and-call-api:
     runs-on: ubuntu-latest
     steps:
-      # Step 1: Log in using the secrets you created
+      # Step 1: Log in using your secrets
       - name: Log in and get access token
         id: login
         run: |
-          # This uses your /api/auth/login endpoint
+          # ✅ CORRECTED URL: Removed "/api" to match your SecurityConfig
           response=$(curl -s -X POST 'https://qp-backend-sg1x.onrender.com/auth/login' \
           -H 'Content-Type: application/json' \
           -d '{"username": "${{ secrets.API_USERNAME }}", "password": "${{ secrets.API_PASSWORD }}"}')
@@ -24,10 +26,9 @@ jobs:
           token=$(echo "$response" | jq -r '.accessToken')
           echo "jwt=${token}" >> $GITHUB_OUTPUT
 
-      # Step 2: Use the token to access the protected departments endpoint
+      # Step 2: Use the token to access your endpoint
       - name: Get all departments
         run: |
           echo "Using token to fetch departments..."
-          # ✅ This now uses your real /departments endpoint
-          curl -f -X GET 'https://qp-backend-sg1x.onrender.com/departments' \
+          curl -f -X GET '${{ secrets.you-backend-url}}/departments' \
           -H 'Authorization: Bearer ${{ steps.login.outputs.jwt }}'
