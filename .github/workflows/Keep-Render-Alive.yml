@@ -4,7 +4,6 @@ name: 'Login and Test Departments Endpoint every 5 minutes'
 
 on:
   schedule:
-    # This is the cron schedule for "every 5 minutes"
     - cron: '*/5 * * * *'
   push:
     branches: [ main ]
@@ -13,22 +12,20 @@ jobs:
   login-and-call-api:
     runs-on: ubuntu-latest
     steps:
-      # Step 1: Log in using your secrets
       - name: Log in and get access token
         id: login
         run: |
-          # ✅ CORRECTED URL: Removed "/api" to match your SecurityConfig
-          response=$(curl -s -X POST 'https://qp-backend-sg1x.onrender.com/auth/login' \
+          # <-- CHANGED: Using the new secret for the URL
+          response=$(curl -s -X POST '${{ secrets.BACKEND_URL }}/auth/login' \
           -H 'Content-Type: application/json' \
           -d '{"username": "${{ secrets.API_USERNAME }}", "password": "${{ secrets.API_PASSWORD }}"}')
           
-          # This saves the token. Make sure the JSON key is '.accessToken'
-          token=$(echo "$response" | jq -r '.accessToken')
+          token=$(echo "$response" | jq -r '.token')
           echo "jwt=${token}" >> $GITHUB_OUTPUT
 
-      # Step 2: Use the token to access your endpoint
       - name: Get all departments
         run: |
           echo "Using token to fetch departments..."
-          curl -f -X GET '${{ secrets.you_backend_url}}/departments' \
+          # <-- CHANGED: Using the new secret for the URL here too
+          curl -f -X GET '${{ secrets.BACKEND_URL }}/departments' \
           -H 'Authorization: Bearer ${{ steps.login.outputs.jwt }}'
