@@ -1,14 +1,33 @@
-name: Keep Render App Alive
+# .github/workflows/api-test.yml
+
+name: 'Login and Test Departments Endpoint'
 
 on:
   schedule:
-    - cron: "*/5 * * * *"   
-  workflow_dispatch:        
+    # This runs the workflow every 5 minutes
+    - cron: '*/5 * * * *'
 
 jobs:
-  ping:
+  login-and-call-api:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Render App
+      # Step 1: Log in using the secrets you created
+      - name: Log in and get access token
+        id: login
         run: |
-          curl -s ${{ secrets.RENDER_URL }} > /dev/null || echo "App is down"
+          # This uses your /api/auth/login endpoint
+          response=$(curl -s -X POST 'https://qp-backend-sg1x.onrender.com/auth/login' \
+          -H 'Content-Type: application/json' \
+          -d '{"username": "${{ secrets.API_USERNAME }}", "password": "${{ secrets.API_PASSWORD }}"}')
+          
+          # This saves the token. Make sure the JSON key is '.accessToken'
+          token=$(echo "$response" | jq -r '.accessToken')
+          echo "jwt=${token}" >> $GITHUB_OUTPUT
+
+      # Step 2: Use the token to access the protected departments endpoint
+      - name: Get all departments
+        run: |
+          echo "Using token to fetch departments..."
+          # ✅ This now uses your real /departments endpoint
+          curl -f -X GET 'https://qp-backend-sg1x.onrender.com/departments' \
+          -H 'Authorization: Bearer ${{ steps.login.outputs.jwt }}'
