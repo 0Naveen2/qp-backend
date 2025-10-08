@@ -1,31 +1,33 @@
-# .github/workflows/api-test.yml
-
-name: 'Login and Test Departments Endpoint every 5 minutes'
+name: 'Login and Test Departments Endpoint every 10 minutes'
 
 on:
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '*/10 * * * *'
   push:
     branches: [ main ]
+
+concurrency:
+  group: api-test
+  cancel-in-progress: true
 
 jobs:
   login-and-call-api:
     runs-on: ubuntu-latest
+
     steps:
       - name: Log in and get access token
         id: login
         run: |
-          # <-- CHANGED: Using the new secret for the URL
+          echo "Logging in to get token..."
           response=$(curl -s -X POST '${{ secrets.BACKEND_URL }}/auth/login' \
           -H 'Content-Type: application/json' \
           -d '{"username": "${{ secrets.API_USERNAME }}", "password": "${{ secrets.API_PASSWORD }}"}')
-          
+
           token=$(echo "$response" | jq -r '.token')
           echo "jwt=${token}" >> $GITHUB_OUTPUT
 
       - name: Get all departments
         run: |
           echo "Using token to fetch departments..."
-          # <-- CHANGED: Using the new secret for the URL here too
           curl -f -X GET '${{ secrets.BACKEND_URL }}/departments' \
           -H 'Authorization: Bearer ${{ steps.login.outputs.jwt }}'
